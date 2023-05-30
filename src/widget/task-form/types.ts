@@ -8,7 +8,7 @@ export type TaskFormProps = {
 }
 
 export type TaskFormEmits = {
-  (e: 'change', form: TaskItem): void
+  (e: 'change', form: TaskItem, oldForm: TaskItem): void
   (e: 'task-checkbox-change', params: CheckboxOnChange): void
   (e: 'subtask-checkbox-change', params: CheckboxOnChange, taskId: string): void
 }

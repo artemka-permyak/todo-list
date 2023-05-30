@@ -25,36 +25,6 @@ export const useDefaultStore = defineStore('default-store', {
       if (index === -1) return
       const updatedTask = set(this.tasks[index], key, value)
       this.tasks.splice(index, 1, updatedTask)
-      if (!this.tasks[index].subtasks) return
-      if (key === 'checked') {
-        if (value) {
-          this.updateTask(
-            id,
-            'subtasks',
-            (this.tasks[index].subtasks || []).map((subtask) => {
-              subtask.checked = true
-              return subtask
-            }),
-          )
-        } else {
-          this.updateTask(
-            id,
-            'subtasks',
-            (this.tasks[index].subtasks || []).map((subtask) => {
-              subtask.checked = false
-              return subtask
-            }),
-          )
-        }
-      } else if (key.match(/subtasks[0-9].checked/)) {
-        if (
-          (this.tasks[index].subtasks || []).every((subtask) => subtask.checked)
-        ) {
-          this.updateTask(id, `checked`, true)
-        } else {
-          this.updateTask(id, `checked`, false)
-        }
-      }
     },
     replaceTask(task: TaskItem) {
       const index = this.tasks.findIndex(({ id }) => id === task.id)

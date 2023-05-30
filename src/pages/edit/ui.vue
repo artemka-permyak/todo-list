@@ -12,6 +12,20 @@
         Подтвердите отмену редактирования
       </Modal>
       <DeleteTaskModal v-model="showDeleteModal" :id="currentTask.id" />
+      <div class="edit-page__cancel-updates">
+        <Button
+          label="Отменить изменение"
+          variant="secondary"
+          @click="cancelUpdate"
+        />
+        <!--        :disabled="currentFormIndex === 0 || forms.length < 2-->
+        <Button
+          label="Повторить отмененное изменение"
+          variant="secondary"
+          @click="repeatCancelUpdate"
+        />
+        <!--        :disabled="forms.length < 2"-->
+      </div>
       <TaskForm
         :form="currentTask"
         @change="handleEditFormChange"
@@ -46,13 +60,14 @@
 <script setup lang="ts">
 import { useDefaultStore } from '@/shared/model/store/store'
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { TaskItem } from '@/shared/model/task'
 import { TaskForm } from '@/widget/task-form'
 import Button from '@/shared/ui/button/button.vue'
 import { routes } from '@/shared/lib/routes'
 import { CheckboxOnChange, Modal } from '@/shared/ui'
 import { DeleteTaskModal } from '@/widget/delete-task-modal'
+import { cloneDeep } from 'lodash'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,15 +75,31 @@ const { getTasks: tasks, replaceTask } = useDefaultStore()
 const currentTask = ref<TaskItem | null>(null)
 const showCancelModal = ref(false)
 const showDeleteModal = ref(false)
+const previousCurrentTasks = ref<TaskItem[]>([])
+const currentTaskIndex = ref(-1)
+const MAX_COUNT_CANCEL = 2
 
 onMounted(() => {
   const id = route.params.id
   const task = tasks.find((task) => task.id === id) || null
-  currentTask.value = task
+  currentTask.value = cloneDeep(task)
 })
 
-function handleEditFormChange(task: TaskItem) {
+function setPreviousCurrentTask(task: TaskItem) {
+  if (currentTask.value) {
+    previousCurrentTasks.value.pop()
+    if (previousCurrentTasks.value.length === MAX_COUNT_CANCEL) {
+      previousCurrentTasks.value.shift()
+    }
+    previousCurrentTasks.value.push(task)
+    previousCurrentTasks.value.push(currentTask.value as TaskItem)
+    currentTaskIndex.value = previousCurrentTasks.value.length - 1
+  }
+}
+
+function handleEditFormChange(task: TaskItem, oldTask: TaskItem) {
   currentTask.value = task
+  setPreviousCurrentTask(oldTask)
 }
 
 function updateTask(task: TaskItem) {
@@ -84,13 +115,21 @@ function updateTask(task: TaskItem) {
 
 function handleTaskCheckboxChange({ checked }: CheckboxOnChange) {
   if ('checked' in currentTask.value) {
+    setPreviousCurrentTask(cloneDeep(currentTask.value))
     currentTask.value.checked = checked
+    currentTask.value.subtasks = (currentTask.value?.subtasks || []).map(
+      (subtask) => {
+        subtask.checked = checked
+        return subtask
+      },
+    )
   }
 }
 
 function handleSubtaskCheckboxChange({ id, checked }: CheckboxOnChange) {
   if (currentTask.value) {
     if ('subtasks' in currentTask.value) {
+      setPreviousCurrentTask(cloneDeep(currentTask.value))
       currentTask.value.subtasks = currentTask.value?.subtasks?.map(
         (subtask) => {
           if (subtask.id === id) {
@@ -98,6 +137,9 @@ function handleSubtaskCheckboxChange({ id, checked }: CheckboxOnChange) {
           }
           return subtask
         },
+      )
+      currentTask.value.checked = (currentTask.value?.subtasks || []).every(
+        (subtask) => subtask.checked,
       )
     }
   }
@@ -114,6 +156,18 @@ function cancelEdit() {
 function handleDeleteTaskButtonClick() {
   showDeleteModal.value = true
 }
+
+function cancelUpdate() {
+  if (currentTaskIndex.value === 0 || currentTaskIndex.value === -1) return
+  currentTaskIndex.value -= 1
+  currentTask.value = previousCurrentTasks.value[currentTaskIndex.value]
+}
+
+function repeatCancelUpdate() {
+  if (currentTaskIndex.value === previousCurrentTasks.value.length - 1) return
+  currentTaskIndex.value += 1
+  currentTask.value = previousCurrentTasks.value[currentTaskIndex.value]
+}
 </script>
 
 <style scoped lang="scss">
@@ -127,6 +181,12 @@ function handleDeleteTaskButtonClick() {
     justify-content: center;
     align-items: center;
     padding-top: 12px;
+    gap: 12px;
+  }
+
+  &__cancel-updates {
+    display: flex;
+    align-items: center;
     gap: 12px;
   }
 }

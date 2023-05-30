@@ -145,6 +145,16 @@ function handleDeleteTaskButtonClick(event: Event, id: string) {
 function handleTaskCheckboxChange({ event, id, checked }: CheckboxOnChange) {
   event.stopPropagation()
   updateTask(id, 'checked', checked)
+  const task = tasks.find((task) => task.id === id)
+  if (!task) return
+  updateTask(
+    id,
+    'subtasks',
+    (task.subtasks || []).map((subtask) => {
+      subtask.checked = checked
+      return subtask
+    }),
+  )
 }
 
 function handleCheckboxSubtaskChange(
@@ -153,12 +163,19 @@ function handleCheckboxSubtaskChange(
 ) {
   const task = tasks.find((task) => task.id === taskId)
   const index = task?.subtasks?.findIndex((subtask) => subtask.id === id)
-  if (index === -1) return
+  if (index === -1 || !task) return
   updateTask(taskId, `subtasks[${index}].checked`, checked)
+  updateTask(
+    taskId,
+    'checked',
+    (task.subtasks || []).every((subtask) => subtask.checked),
+  )
 }
 
 function handleTaskClick(id: string) {
   const ids = showSubtasksTasksIds.value
+  const task = tasks.find((task) => task.id === id)
+  if (!task?.subtasks?.length) return
   if (ids.includes(id)) {
     ids.splice(ids.indexOf(id), 1)
   } else {
