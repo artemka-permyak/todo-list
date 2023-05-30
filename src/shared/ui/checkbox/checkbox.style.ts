@@ -1,0 +1,31 @@
+export function getCheckboxClassName(checked: boolean) {
+  // return clsx(
+  //   'relative',
+  //   'flex',
+  //   'justify-center',
+  //   'items-center',
+  //   'select-none',
+  //   'cursor-pointer',
+  //   'bg-white',
+  //   'm-0',
+  //   'p-0',
+  //   'text-current',
+  //   'w-[16px]',
+  //   'h-[16px]',
+  //   'rounded-[4px]',
+  //   'border-[1px]',
+  //   'border-gray_400',
+  //
+  //   'before:content-[""]',
+  //   'before:bg-primary_100',
+  //   'before:inset-0',
+  //   'before:absolute',
+  //   'before:w-full',
+  //   'before:h-full',
+  //   'before:rounded-[4px]',
+  //   'before:scale-0',
+  //   'before:opacity-0',
+  //   'before:transition-all',
+  //   checked && 'before:scale-100 before:opacity-100 border-none',
+  // )
+}
