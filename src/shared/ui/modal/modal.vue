@@ -24,7 +24,7 @@
           <Icon name="Plus" :size="12" />
         </div>
       </div>
-      <div v-if="showSlot" className="modal-body">
+      <div v-if="showSlot" class="modal-body">
         <slot />
       </div>
       <div v-if="props.confirmText" class="modal-footer">
